@@ -24,6 +24,7 @@ form {
   background-color: rgb(9, 73, 100, 0.6);
   padding: 30rem 50rem 30rem 50rem;
   border-radius: 15rem;
+  border: 2rem solid rgb(14, 94, 129);
 }
 
 h1 {
@@ -58,4 +59,45 @@ input {
   color: rgb(9, 73, 100);
   width: 100%;
   border: none;
+}
+
+button {
+  font-size: 25rem;
+  padding: 7rem 25rem 7rem 25rem;
+  border-radius: 20rem;
+  font-weight: bold;
+  margin-bottom: 10rem;
+  color: rgb(6, 58, 80);
+  border: 2rem solid rgb(6, 58, 80);
+}
+
+button:hover {
+  background-color: rgb(189, 204, 211);
+}
+
+.formDiv {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+}
+
+label {
+  font-size: 27rem;
+  color: white;
+}
+
+.newAcc {
+  width: 600rem;
+  margin: 200rem auto;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  background-color: rgb(9, 73, 100, 0.6);
+  padding: 30rem 50rem 15rem 50rem;
+  border-radius: 15rem;
+  border: 2rem solid rgb(14, 94, 129);
+}
+
+.singUp-Btn {
+  margin-top: 10rem;
+  margin-bottom: 0rem;
 }
