@@ -5,16 +5,6 @@ const passwordInput = document.querySelector(".password");
 const form = document.querySelector("form");
 const singUp = document.querySelector(".singUp");
 
-//trebace mi dve klase jedna se zoce account a druga accManager
-//iskoristi accounts array da napravis acccountove
-//primer new Account(accounts[0].name)
-//ovo bolje moze da se napravi preko petlje
-
-const accounts = [
-  { name: "Lazar Vuckovic", email: "lazarv@gmail.com", password: "123" },
-  { name: "Nemanja Malesija", email: "nemanjam@gmail.com", password: "321" },
-];
-
 let enteredEmail;
 let enteredPassword;
 
@@ -27,7 +17,23 @@ passwordInput.addEventListener("input", (e) => {
 });
 
 class Account {
-  constructor(name, email, password) {}
+  constructor(name, email, password) {
+    this.name = name;
+    this.email = email;
+    this.password = password;
+  }
+
+  getName() {
+    return this.name;
+  }
+
+  getEmail() {
+    return this.email;
+  }
+
+  getPassword() {
+    return this.password;
+  }
 }
 
 class AccManager {
@@ -38,6 +44,12 @@ class AccManager {
   addAcc(account) {
     this.accounts.push(account);
   }
+
+  findAcc(email, password) {
+    return this.accounts.find(
+      (acc) => acc.getEmail() === email && acc.getPassword() === password
+    );
+  }
 }
 
 const manager = new AccManager();
@@ -46,24 +58,20 @@ manager.addAcc(acc1);
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
-
-  if (!enteredEmail || !enteredPassword) {
-    alert("Please enter both email and password.");
-    return;
-  }
-  // proveri ima li ovaj input u accManager array
-  const check = new accChecker(enteredEmail, enteredPassword);
-
-  if (check.isAuthenticated()) {
-    form.innerHTML = `<h1>Hello ${check.getName()}</h1>`;
-  } else {
-    alert("Invalid email or password. Please try again.");
-  }
 });
 
 singUp.addEventListener("click", (e) => {
   form.innerHTML = `<form class="newAcc">
     <h1>Singup</h1>
+       <div class="formDiv">
+          <label for="name">name:</label>
+          <input
+            type="text"
+            class="name"
+            required
+          />
+        </div>
+     
 <div class="formDiv">
           <label for="newEmail">email:</label>
           <input
@@ -77,14 +85,6 @@ singUp.addEventListener("click", (e) => {
           <input
             type="text"
             class="newPassword"
-            required
-          />
-        </div>
-        <div class="formDiv">
-          <label for="confirmPassword">confirm password:</label>
-          <input
-            type="text"
-            class="confirmPassword"
             required
           />
         </div>
