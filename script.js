@@ -2,8 +2,11 @@
 
 const emailInput = document.querySelector(".email");
 const passwordInput = document.querySelector(".password");
-const form = document.querySelector("form");
 const singUp = document.querySelector(".singUp");
+const loginForm = document.querySelector(".hidden-1");
+const signupForm = document.querySelector(".hidden-2");
+const singUpBtn = document.querySelector(".singUp-Btn");
+const backToLogin = document.querySelector(".backToLogin");
 
 let enteredEmail;
 let enteredPassword;
@@ -53,43 +56,18 @@ class AccManager {
 }
 
 const manager = new AccManager();
-const acc1 = new Account();
-manager.addAcc(acc1);
 
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
+singUp.addEventListener("click", () => {
+  loginForm.classList.add("hidden-2");
+  signupForm.classList.remove("hidden-2");
 });
 
-singUp.addEventListener("click", (e) => {
-  form.innerHTML = `<form class="newAcc">
-    <h1>Singup</h1>
-       <div class="formDiv">
-          <label for="name">name:</label>
-          <input
-            type="text"
-            class="name"
-            required
-          />
-        </div>
-     
-<div class="formDiv">
-          <label for="newEmail">email:</label>
-          <input
-            type="text"
-            class="newEmail"
-            required
-          />
-        </div>
-        <div class="formDiv">
-          <label for="newPassword">password:</label>
-          <input
-            type="text"
-            class="newPassword"
-            required
-          />
-        </div>
-      <button class="singUp-Btn" type="submit">Singup</button>
+singUpBtn.addEventListener("click", (e) => {
+  signupForm.classList.add("hidden-2");
+  loginForm.classList.remove("hidden-2");
+});
 
-
-  </form>`;
+backToLogin.addEventListener("click", (e) => {
+  signupForm.classList.add("hidden-2");
+  loginForm.classList.remove("hidden-2");
 });

@@ -7,7 +7,7 @@
     <link href="style.css" rel="stylesheet" />
   </head>
   <body>
-    <form>
+    <form class="loginForm hidden-1">
       <h1>Login</h1>
       <input class="email" type="email" placeholder="Enter your email" />
       <input
@@ -19,6 +19,26 @@
       <h3>
         dont't have an account?
         <p class="singUp">sing up!</p>
+      </h3>
+    </form>
+    <form class="newAcc hidden-2">
+      <h1>Signup</h1>
+      <div class="formDiv">
+        <label for="name">Name:</label>
+        <input type="text" class="name" />
+      </div>
+      <div class="formDiv">
+        <label for="newEmail">Email:</label>
+        <input type="text" class="newEmail" />
+      </div>
+      <div class="formDiv">
+        <label for="newPassword">Password:</label>
+        <input type="text" class="newPassword" />
+      </div>
+      <button class="singUp-Btn" type="submit">Signup</button>
+      <h3>
+        already have an account?
+        <p class="backToLogin">login!</p>
       </h3>
     </form>
     <script src="script.js"></script>

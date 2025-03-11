@@ -15,7 +15,7 @@ body {
   font-family: sans-serif;
 }
 
-form {
+.loginForm {
   width: 600rem;
   margin: 200rem auto;
   display: flex;
@@ -98,6 +98,10 @@ label {
 }
 
 .singUp-Btn {
-  margin-top: 10rem;
-  margin-bottom: 0rem;
+  margin-top: 5rem;
+  margin-bottom: 10rem;
+}
+
+.hidden-2 {
+  display: none;
 }
