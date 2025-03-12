@@ -105,3 +105,9 @@ label {
 .hidden-2 {
   display: none;
 }
+
+.hello {
+  padding-top: 20rem;
+  padding-left: 20rem;
+  color: rgb(1, 103, 171);
+}
