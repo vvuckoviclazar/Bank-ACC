@@ -9,12 +9,13 @@
   <body>
     <form class="loginForm hidden-1">
       <h1>Login</h1>
-      <input class="email" type="email" placeholder="Enter your email" />
+      <input class="email" type="text" placeholder="Enter your email" />
       <input
         class="password"
         type="password"
         placeholder="Enter your password"
       />
+      <span class="loginSpan hidden-span">Incorrect email or password!</span>
       <button type="submit">Login</button>
       <h3>
         dont't have an account?
@@ -35,6 +36,18 @@
         <label for="newPassword">Password:</label>
         <input type="text" class="newPassword" />
       </div>
+      <span class="singUp-span3 hidden-span4"
+        >The name field is required.
+        <button class="spanBtn nameBtn">x</button></span
+      >
+      <span class="singUp-span1 hidden-span2"
+        >Invalid email! Email must contain '@'.
+        <button class="spanBtn emailBtn">x</button>
+      </span>
+      <span class="singUp-span2 hidden-span3"
+        >Password must be at least 4 characters!
+        <button class="spanBtn passwordBtn">x</button></span
+      >
       <button class="singUp-Btn" type="submit">Signup</button>
       <h3>
         already have an account?

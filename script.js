@@ -4,12 +4,19 @@ const emailInput = document.querySelector(".email");
 const passwordInput = document.querySelector(".password");
 const singUp = document.querySelector(".singUp");
 const loginForm = document.querySelector(".loginForm");
-const signupForm = document.querySelector(".hidden-2");
+const signupForm = document.querySelector(".newAcc");
 const singUpBtn = document.querySelector(".singUp-Btn");
 const backToLogin = document.querySelector(".backToLogin");
 const newName = document.querySelector(".name");
 const newEmail = document.querySelector(".newEmail");
 const newPassword = document.querySelector(".newPassword");
+const loginSpan = document.querySelector(".loginSpan");
+const singUpSpan1 = document.querySelector(".singUp-span1");
+const singUpSpan2 = document.querySelector(".singUp-span2");
+const singUpSpan3 = document.querySelector(".singUp-span3");
+const nameBtn = document.querySelector(".nameBtn");
+const emailBtn = document.querySelector(".emailBtn");
+const passwordBtn = document.querySelector(".passwordBtn");
 
 let enteredEmail;
 let enteredPassword;
@@ -63,13 +70,27 @@ const manager = new AccManager();
 signupForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
+  singUpSpan1.classList.add("hidden-span2");
+  singUpSpan2.classList.add("hidden-span3");
+  singUpSpan3.classList.add("hidden-span4");
+
+  if (newName.value.trim() === "") {
+    singUpSpan3.classList.remove("hidden-span4");
+  }
+
   if (!newEmail.value.includes("@")) {
-    alert("Invalid email! Email must contain '@'.");
-    return;
+    singUpSpan1.classList.remove("hidden-span2");
   }
 
   if (newPassword.value.length < 4) {
-    alert("Password must be at least 4 characters!");
+    singUpSpan2.classList.remove("hidden-span3");
+  }
+
+  if (
+    newName.value.trim() === "" ||
+    !newEmail.value.includes("@") ||
+    newPassword.value.length < 4
+  ) {
     return;
   }
 
@@ -95,13 +116,19 @@ loginForm.addEventListener("submit", (e) => {
 
   const account = manager.findAcc(enteredEmail, enteredPassword);
 
-  if (!manager.accounts.some((acc) => acc.getEmail() === enteredEmail)) {
-    alert("Email is not correct!");
-    return;
-  }
+  if (!account) {
+    loginSpan.classList.remove("hidden-span");
+    setTimeout(() => {
+      loginSpan.classList.add("show-span");
+    }, 10);
 
-  if (!manager.accounts.some((acc) => acc.getPassword() === enteredPassword)) {
-    alert("Password is not correct!");
+    setTimeout(() => {
+      loginSpan.classList.remove("show-span");
+      setTimeout(() => {
+        loginSpan.classList.add("hidden-span");
+      }, 500);
+    }, 3000);
+
     return;
   }
 
@@ -116,6 +143,28 @@ singUp.addEventListener("click", () => {
 });
 
 backToLogin.addEventListener("click", (e) => {
+  singUpSpan1.classList.add("hidden-span2");
+  singUpSpan2.classList.add("hidden-span3");
   signupForm.classList.add("hidden-2");
   loginForm.classList.remove("hidden-2");
 });
+
+nameBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  singUpSpan3.classList.add("hidden-span4");
+});
+
+emailBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  singUpSpan1.classList.add("hidden-span2");
+});
+
+passwordBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  singUpSpan2.classList.add("hidden-span3");
+});
+
+// napravi funkciju create notification
+// ona ce da primi dva argumenta
+// prvi ce da bude type (moze da bude error i succses)
+// drugi argument ce da bude notification text
