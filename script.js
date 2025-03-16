@@ -67,6 +67,8 @@ class AccManager {
 
 const manager = new AccManager();
 
+function createNotification(type, text) {}
+
 signupForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
