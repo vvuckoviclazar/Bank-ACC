@@ -17,6 +17,25 @@ const singUpSpan3 = document.querySelector(".singUp-span3");
 const nameBtn = document.querySelector(".nameBtn");
 const emailBtn = document.querySelector(".emailBtn");
 const passwordBtn = document.querySelector(".passwordBtn");
+const accList = document.querySelector(".accList");
+const helloMessage = document.querySelector(".hello");
+
+const testAccounts = [
+  {
+    owner: "Lazar Vuckovic",
+    email: "lazarv@gmail.com",
+    password: "1234",
+    pin: 1111,
+    movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
+  },
+  {
+    owner: "Nemanja Malesija",
+    email: "nemanja@gmail.com",
+    password: "1234",
+    pin: 2222,
+    movements: [500, -200, 340, -300, -20, 50, 400, -460],
+  },
+];
 
 let enteredEmail;
 let enteredPassword;
@@ -30,10 +49,15 @@ passwordInput.addEventListener("input", (e) => {
 });
 
 class Account {
-  constructor(name, email, password) {
+  constructor(name, email, password, movements) {
     this.name = name;
     this.email = email;
     this.password = password;
+    this.movements = movements || [];
+  }
+
+  getMovements() {
+    return this.movements;
   }
 
   getName() {
@@ -51,7 +75,9 @@ class Account {
 
 class AccManager {
   constructor() {
-    this.accounts = [];
+    this.accounts = testAccounts.map(
+      (acc) => new Account(acc.owner, acc.email, acc.password, acc.movements)
+    );
   }
 
   addAcc(account) {
@@ -68,6 +94,20 @@ class AccManager {
 const manager = new AccManager();
 
 function createNotification(type, text) {}
+
+function displayMovements(account) {
+  accList.innerHTML = "";
+  account.getMovements().forEach((mov, i) => {
+    const type = mov < 0 ? "deduction" : "income";
+    const li = document.createElement("li");
+    li.classList.add("movement", `movement--${type}`);
+    li.innerHTML = `
+      <span class="mov-value">${mov}</span> 
+      <span class="mov-type">${type}</span>
+    `;
+    accList.appendChild(li);
+  });
+}
 
 signupForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -99,7 +139,8 @@ signupForm.addEventListener("submit", (e) => {
   const newAccount = new Account(
     newName.value,
     newEmail.value,
-    newPassword.value
+    newPassword.value,
+    []
   );
   manager.addAcc(newAccount);
   console.log("Account added:", newAccount);
@@ -135,7 +176,9 @@ loginForm.addEventListener("submit", (e) => {
   }
 
   if (account) {
-    document.body.innerHTML = `<h1 class="hello">Hello, ${account.getName()}!</h1>`;
+    loginForm.classList.add("hidden-2");
+    helloMessage.textContent = `Hi ${account.getName()}`;
+    displayMovements(account);
   }
 });
 

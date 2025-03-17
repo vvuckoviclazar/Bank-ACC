@@ -13,6 +13,14 @@ body {
   background-color: rgb(157, 216, 241);
   display: flex;
   font-family: sans-serif;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+ul {
+  list-style-type: none;
+  padding-left: 0rem;
 }
 
 .loginForm {
