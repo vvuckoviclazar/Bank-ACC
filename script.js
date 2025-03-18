@@ -10,7 +10,7 @@ const backToLogin = document.querySelector(".backToLogin");
 const newName = document.querySelector(".name");
 const newEmail = document.querySelector(".newEmail");
 const newPassword = document.querySelector(".newPassword");
-const loginSpan = document.querySelector(".loginSpan");
+const errorSpan = document.querySelector(".errorSpan");
 const singUpSpan1 = document.querySelector(".singUp-span1");
 const singUpSpan2 = document.querySelector(".singUp-span2");
 const singUpSpan3 = document.querySelector(".singUp-span3");
@@ -19,6 +19,14 @@ const emailBtn = document.querySelector(".emailBtn");
 const passwordBtn = document.querySelector(".passwordBtn");
 const accList = document.querySelector(".accList");
 const helloMessage = document.querySelector(".hello");
+const incomeSpan = document.querySelector(".incomeSpan");
+const deductionSpan = document.querySelector(".deductionSpan");
+const totalSpan = document.querySelector(".totalSpan");
+const sortPlus = document.querySelector(".sortPlus");
+const sortMinus = document.querySelector(".sortMinus");
+const listContainer = document.querySelector(".list-container");
+const errorDiv = document.querySelector(".errorDiv");
+const errorDiv2 = document.querySelector(".errorDiv2");
 
 const testAccounts = [
   {
@@ -37,6 +45,7 @@ const testAccounts = [
   },
 ];
 
+let currentAccount;
 let enteredEmail;
 let enteredPassword;
 
@@ -49,11 +58,11 @@ passwordInput.addEventListener("input", (e) => {
 });
 
 class Account {
-  constructor(name, email, password, movements) {
+  constructor(name, email, password, movements = []) {
     this.name = name;
     this.email = email;
     this.password = password;
-    this.movements = movements || [];
+    this.movements = movements;
   }
 
   getMovements() {
@@ -93,58 +102,105 @@ class AccManager {
 
 const manager = new AccManager();
 
-function createNotification(type, text) {}
+function createLoginNotification(text) {
+  errorDiv.innerHTML = `<span class="errorSpan">${text}</span>`;
+}
 
-function displayMovements(account) {
+function createSignupNotification(text) {
+  errorDiv2.innerHTML = `
+    <span class="singUp-span2">
+      ${text}
+      <button class="spanBtn ">x</button>
+    </span>
+  `;
+}
+
+function displayMovements(account, filterType = "all") {
   accList.innerHTML = "";
-  account.getMovements().forEach((mov, i) => {
+
+  const movements = account.getMovements();
+
+  // za tri varijable ispod napraviti metode u manager
+  const totalIncome = movements
+    .filter((mov) => mov > 0)
+    .reduce((acc, mov) => acc + mov, 0);
+
+  const totalDeductions = movements
+    .filter((mov) => mov < 0)
+    .reduce((acc, mov) => acc + mov, 0);
+
+  const totalBalance = totalIncome + totalDeductions;
+
+  incomeSpan.textContent = `${totalIncome}`;
+  deductionSpan.textContent = `${totalDeductions}`;
+  totalSpan.textContent = `${totalBalance}`;
+
+  //sort a ne filter i u manager
+  const filteredMovements =
+    filterType === "income"
+      ? movements.filter((mov) => mov > 0)
+      : filterType === "deduction"
+      ? movements.filter((mov) => mov < 0)
+      : movements;
+  // posebna funkcija za ovo
+  filteredMovements.forEach((mov, i) => {
     const type = mov < 0 ? "deduction" : "income";
     const li = document.createElement("li");
     li.classList.add("movement", `movement--${type}`);
+
     li.innerHTML = `
       <span class="mov-value">${mov}</span> 
       <span class="mov-type">${type}</span>
     `;
+
+    const movTypeSpan = li.querySelector(".mov-type");
+    movTypeSpan.style.backgroundColor =
+      type === "income" ? "rgb(74, 198, 74)" : "rgb(218, 70, 70)";
+
     accList.appendChild(li);
   });
 }
 
+sortPlus.addEventListener("click", () => {
+  if (currentAccount) {
+    displayMovements(currentAccount, "income");
+  }
+});
+
+sortMinus.addEventListener("click", () => {
+  if (currentAccount) {
+    displayMovements(currentAccount, "deduction");
+  }
+});
+
 signupForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
-  singUpSpan1.classList.add("hidden-span2");
-  singUpSpan2.classList.add("hidden-span3");
-  singUpSpan3.classList.add("hidden-span4");
+  errorDiv2.innerHTML = "";
 
   if (newName.value.trim() === "") {
-    singUpSpan3.classList.remove("hidden-span4");
+    createSignupNotification("The name field is required.");
+    // createErrorNoticifation("error", "text")
+    return;
   }
 
   if (!newEmail.value.includes("@")) {
-    singUpSpan1.classList.remove("hidden-span2");
+    createSignupNotification("Invalid email! Email must contain '@'.");
+    return;
   }
 
   if (newPassword.value.length < 4) {
-    singUpSpan2.classList.remove("hidden-span3");
-  }
-
-  if (
-    newName.value.trim() === "" ||
-    !newEmail.value.includes("@") ||
-    newPassword.value.length < 4
-  ) {
+    createSignupNotification("Password must be at least 4 characters!");
     return;
   }
 
   const newAccount = new Account(
     newName.value,
     newEmail.value,
-    newPassword.value,
-    []
+    newPassword.value
   );
+
   manager.addAcc(newAccount);
-  console.log("Account added:", newAccount);
-  console.log("All accounts:", manager.accounts);
 
   newName.value = "";
   newEmail.value = "";
@@ -156,29 +212,24 @@ signupForm.addEventListener("submit", (e) => {
 
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
+  // ideja je osloboditi se varijavle currentAcc to jest prebaciti je u menager
+  currentAccount = manager.findAcc(enteredEmail, enteredPassword);
 
-  const account = manager.findAcc(enteredEmail, enteredPassword);
-
-  if (!account) {
-    loginSpan.classList.remove("hidden-span");
-    setTimeout(() => {
-      loginSpan.classList.add("show-span");
-    }, 10);
+  if (!currentAccount) {
+    createLoginNotification("Incorrect email or password!");
 
     setTimeout(() => {
-      loginSpan.classList.remove("show-span");
-      setTimeout(() => {
-        loginSpan.classList.add("hidden-span");
-      }, 500);
+      errorDiv.innerHTML = "";
     }, 3000);
 
     return;
   }
 
-  if (account) {
+  if (currentAccount) {
     loginForm.classList.add("hidden-2");
-    helloMessage.textContent = `Hi ${account.getName()}`;
-    displayMovements(account);
+    listContainer.classList.remove("hidden-list");
+    helloMessage.textContent = `Hi ${currentAccount.getName()}`;
+    displayMovements(currentAccount);
   }
 });
 
@@ -188,25 +239,15 @@ singUp.addEventListener("click", () => {
 });
 
 backToLogin.addEventListener("click", (e) => {
-  singUpSpan1.classList.add("hidden-span2");
-  singUpSpan2.classList.add("hidden-span3");
   signupForm.classList.add("hidden-2");
   loginForm.classList.remove("hidden-2");
+  listContainer.classList.add("hidden-list");
 });
 
-nameBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  singUpSpan3.classList.add("hidden-span4");
-});
-
-emailBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  singUpSpan1.classList.add("hidden-span2");
-});
-
-passwordBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  singUpSpan2.classList.add("hidden-span3");
+errorDiv2.addEventListener("click", (e) => {
+  if (e.target.classList.contains("spanBtn")) {
+    errorDiv2.innerHTML = "";
+  }
 });
 
 // napravi funkciju create notification

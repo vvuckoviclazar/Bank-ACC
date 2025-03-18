@@ -15,7 +15,7 @@
         type="password"
         placeholder="Enter your password"
       />
-      <span class="loginSpan hidden-span">Incorrect email or password!</span>
+      <div class="errorDiv"></div>
       <button type="submit">Login</button>
       <h3>
         dont't have an account?
@@ -36,26 +36,32 @@
         <label for="newPassword">Password:</label>
         <input type="text" class="newPassword" />
       </div>
-      <span class="singUp-span3 hidden-span4"
-        >The name field is required.
-        <button class="spanBtn nameBtn">x</button></span
-      >
-      <span class="singUp-span1 hidden-span2"
-        >Invalid email! Email must contain '@'.
-        <button class="spanBtn emailBtn">x</button>
-      </span>
-      <span class="singUp-span2 hidden-span3"
-        >Password must be at least 4 characters!
-        <button class="spanBtn passwordBtn">x</button></span
-      >
+
+      <div class="errorDiv2"></div>
+
       <button class="singUp-Btn" type="submit">Signup</button>
       <h3>
         already have an account?
         <p class="backToLogin">login!</p>
       </h3>
     </form>
-    <h1 class="hello"></h1>
-    <ul class="accList"></ul>
+    <div class="list-container hidden-list">
+      <h1 class="hello"></h1>
+      <ul class="accList"></ul>
+      <div class="sortDiv">
+        <h4 class="incomeH4">income: <span class="incomeSpan"></span></h4>
+        <h4 class="deductionH4">
+          deductions:
+          <span class="deductionSpan"></span>
+        </h4>
+        <h4 class="totalH4">
+          total:
+          <span class="totalSpan"></span>
+        </h4>
+        <h4 class="sortPlus">sort +</h4>
+        <h4 class="sortMinus">sort -</h4>
+      </div>
+    </div>
     <script src="script.js"></script>
   </body>
 </html>
