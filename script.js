@@ -98,6 +98,36 @@ class AccManager {
       (acc) => acc.getEmail() === email && acc.getPassword() === password
     );
   }
+
+  sortMovements(account, sortType) {
+    let movements = [...account.getMovements()];
+
+    if (sortType === "asc") {
+      return movements.sort((a, b) => a - b);
+    } else if (sortType === "desc") {
+      return movements.sort((a, b) => b - a);
+    } else {
+      return movements;
+    }
+  }
+
+  getTotalIncome(account) {
+    return account
+      .getMovements()
+      .filter((mov) => mov > 0)
+      .reduce((acc, mov) => acc + mov, 0);
+  }
+
+  getTotalDeductions(account) {
+    return account
+      .getMovements()
+      .filter((mov) => mov < 0)
+      .reduce((acc, mov) => acc + mov, 0);
+  }
+
+  getTotalBalance(account) {
+    return this.getTotalIncome(account) + this.getTotalDeductions(account);
+  }
 }
 
 const manager = new AccManager();
@@ -115,35 +145,20 @@ function createSignupNotification(text) {
   `;
 }
 
-function displayMovements(account, filterType = "all") {
+function displayMovements(account, sortType = "default") {
   accList.innerHTML = "";
 
-  const movements = account.getMovements();
+  const movements = manager.sortMovements(account, sortType);
 
-  // za tri varijable ispod napraviti metode u manager
-  const totalIncome = movements
-    .filter((mov) => mov > 0)
-    .reduce((acc, mov) => acc + mov, 0);
+  manager.getTotalIncome(account);
+  manager.getTotalDeductions(account);
+  manager.getTotalBalance(account);
 
-  const totalDeductions = movements
-    .filter((mov) => mov < 0)
-    .reduce((acc, mov) => acc + mov, 0);
+  incomeSpan.textContent = `${manager.getTotalIncome(account)}`;
+  deductionSpan.textContent = `${manager.getTotalDeductions(account)}`;
+  totalSpan.textContent = `${manager.getTotalBalance(account)}`;
 
-  const totalBalance = totalIncome + totalDeductions;
-
-  incomeSpan.textContent = `${totalIncome}`;
-  deductionSpan.textContent = `${totalDeductions}`;
-  totalSpan.textContent = `${totalBalance}`;
-
-  //sort a ne filter i u manager
-  const filteredMovements =
-    filterType === "income"
-      ? movements.filter((mov) => mov > 0)
-      : filterType === "deduction"
-      ? movements.filter((mov) => mov < 0)
-      : movements;
-  // posebna funkcija za ovo
-  filteredMovements.forEach((mov, i) => {
+  movements.forEach((mov) => {
     const type = mov < 0 ? "deduction" : "income";
     const li = document.createElement("li");
     li.classList.add("movement", `movement--${type}`);
@@ -163,13 +178,13 @@ function displayMovements(account, filterType = "all") {
 
 sortPlus.addEventListener("click", () => {
   if (currentAccount) {
-    displayMovements(currentAccount, "income");
+    displayMovements(currentAccount, "desc");
   }
 });
 
 sortMinus.addEventListener("click", () => {
   if (currentAccount) {
-    displayMovements(currentAccount, "deduction");
+    displayMovements(currentAccount, "asc");
   }
 });
 
