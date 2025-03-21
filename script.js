@@ -45,7 +45,6 @@ const testAccounts = [
   },
 ];
 
-let currentAccount;
 let enteredEmail;
 let enteredPassword;
 
@@ -87,6 +86,7 @@ class AccManager {
     this.accounts = testAccounts.map(
       (acc) => new Account(acc.owner, acc.email, acc.password, acc.movements)
     );
+    this.currentAccount = null;
   }
 
   addAcc(account) {
@@ -94,13 +94,25 @@ class AccManager {
   }
 
   findAcc(email, password) {
-    return this.accounts.find(
+    const account = this.accounts.find(
       (acc) => acc.getEmail() === email && acc.getPassword() === password
     );
+
+    if (account) {
+      this.currentAccount = account;
+    }
+
+    return account;
   }
 
-  sortMovements(account, sortType) {
-    let movements = [...account.getMovements()];
+  getCurrentAccount() {
+    return this.currentAccount;
+  }
+
+  sortMovements(sortType) {
+    if (!this.currentAccount) return [];
+
+    let movements = [...this.currentAccount.getMovements()];
 
     if (sortType === "asc") {
       return movements.sort((a, b) => a - b);
@@ -111,52 +123,33 @@ class AccManager {
     }
   }
 
-  getTotalIncome(account) {
-    return account
+  getTotalIncome() {
+    if (!this.currentAccount) return 0;
+
+    return this.currentAccount
       .getMovements()
       .filter((mov) => mov > 0)
       .reduce((acc, mov) => acc + mov, 0);
   }
 
-  getTotalDeductions(account) {
-    return account
+  getTotalDeductions() {
+    if (!this.currentAccount) return 0;
+
+    return this.currentAccount
       .getMovements()
       .filter((mov) => mov < 0)
       .reduce((acc, mov) => acc + mov, 0);
   }
 
-  getTotalBalance(account) {
-    return this.getTotalIncome(account) + this.getTotalDeductions(account);
+  getTotalBalance() {
+    return this.getTotalIncome() + this.getTotalDeductions();
   }
 }
 
 const manager = new AccManager();
 
-function createLoginNotification(text) {
-  errorDiv.innerHTML = `<span class="errorSpan">${text}</span>`;
-}
-
-function createSignupNotification(text) {
-  errorDiv2.innerHTML = `
-    <span class="singUp-span2">
-      ${text}
-      <button class="spanBtn ">x</button>
-    </span>
-  `;
-}
-
-function displayMovements(account, sortType = "default") {
-  accList.innerHTML = "";
-
-  const movements = manager.sortMovements(account, sortType);
-
-  manager.getTotalIncome(account);
-  manager.getTotalDeductions(account);
-  manager.getTotalBalance(account);
-
-  incomeSpan.textContent = `${manager.getTotalIncome(account)}`;
-  deductionSpan.textContent = `${manager.getTotalDeductions(account)}`;
-  totalSpan.textContent = `${manager.getTotalBalance(account)}`;
+function renderMovements(movements, container) {
+  container.innerHTML = "";
 
   movements.forEach((mov) => {
     const type = mov < 0 ? "deduction" : "income";
@@ -172,19 +165,46 @@ function displayMovements(account, sortType = "default") {
     movTypeSpan.style.backgroundColor =
       type === "income" ? "rgb(74, 198, 74)" : "rgb(218, 70, 70)";
 
-    accList.appendChild(li);
+    container.appendChild(li);
   });
 }
 
+function createNotification(type, text, target, isRemovable) {
+  if (type === "error") {
+    if (target === "login") {
+      errorDiv.innerHTML = `<span class="errorSpan">${text}</span>`;
+    } else if (target === "signup") {
+      errorDiv2.innerHTML = `
+        <span class="singUp-span2">
+          ${text}
+          <button class="spanBtn">x</button>
+        </span>
+      `;
+    }
+  }
+}
+
+function displayMovements(sortType = "default") {
+  accList.innerHTML = "";
+
+  const movements = manager.sortMovements(sortType);
+
+  incomeSpan.textContent = `${manager.getTotalIncome()}`;
+  deductionSpan.textContent = `${manager.getTotalDeductions()}`;
+  totalSpan.textContent = `${manager.getTotalBalance()}`;
+
+  renderMovements(movements, accList);
+}
+
 sortPlus.addEventListener("click", () => {
-  if (currentAccount) {
-    displayMovements(currentAccount, "desc");
+  if (manager.getCurrentAccount()) {
+    displayMovements("desc");
   }
 });
 
 sortMinus.addEventListener("click", () => {
-  if (currentAccount) {
-    displayMovements(currentAccount, "asc");
+  if (manager.getCurrentAccount()) {
+    displayMovements("asc");
   }
 });
 
@@ -194,18 +214,25 @@ signupForm.addEventListener("submit", (e) => {
   errorDiv2.innerHTML = "";
 
   if (newName.value.trim() === "") {
-    createSignupNotification("The name field is required.");
-    // createErrorNoticifation("error", "text")
+    createNotification("error", "The name field is required.", "signup");
     return;
   }
 
   if (!newEmail.value.includes("@")) {
-    createSignupNotification("Invalid email! Email must contain '@'.");
+    createNotification(
+      "error",
+      "Invalid email! Email must contain '@'.",
+      "signup"
+    );
     return;
   }
 
   if (newPassword.value.length < 4) {
-    createSignupNotification("Password must be at least 4 characters!");
+    createNotification(
+      "error",
+      "Password must be at least 4 characters!",
+      "signup"
+    );
     return;
   }
 
@@ -227,25 +254,22 @@ signupForm.addEventListener("submit", (e) => {
 
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  // ideja je osloboditi se varijavle currentAcc to jest prebaciti je u menager
-  currentAccount = manager.findAcc(enteredEmail, enteredPassword);
 
-  if (!currentAccount) {
-    createLoginNotification("Incorrect email or password!");
+  manager.findAcc(enteredEmail, enteredPassword);
+
+  if (!manager.getCurrentAccount()) {
+    createNotification("error", "Incorrect email or password!", "login");
 
     setTimeout(() => {
       errorDiv.innerHTML = "";
     }, 3000);
-
     return;
   }
 
-  if (currentAccount) {
-    loginForm.classList.add("hidden-2");
-    listContainer.classList.remove("hidden-list");
-    helloMessage.textContent = `Hi ${currentAccount.getName()}`;
-    displayMovements(currentAccount);
-  }
+  loginForm.classList.add("hidden-2");
+  listContainer.classList.remove("hidden-list");
+  helloMessage.textContent = `Hi ${manager.getCurrentAccount().getName()}`;
+  displayMovements();
 });
 
 singUp.addEventListener("click", () => {
@@ -264,8 +288,3 @@ errorDiv2.addEventListener("click", (e) => {
     errorDiv2.innerHTML = "";
   }
 });
-
-// napravi funkciju create notification
-// ona ce da primi dva argumenta
-// prvi ce da bude type (moze da bude error i succses)
-// drugi argument ce da bude notification text
