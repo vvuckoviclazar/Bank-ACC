@@ -16,6 +16,7 @@ body {
   display: flex;
   align-items: center;
   flex-direction: column;
+  padding-top: 30rem;
 }
 
 ul {
@@ -110,7 +111,7 @@ label {
 }
 
 .newAcc {
-  width: 600rem;
+  width: 100%;
   margin: 200rem auto;
   display: flex;
   align-items: center;
