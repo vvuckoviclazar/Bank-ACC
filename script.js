@@ -27,6 +27,9 @@ const sortMinus = document.querySelector(".sortMinus");
 const listContainer = document.querySelector(".list-container");
 const errorDiv = document.querySelector(".errorDiv");
 const errorDiv2 = document.querySelector(".errorDiv2");
+const transferBtn = document.querySelector(".transferBtn");
+const toInput = document.querySelector(".to");
+const amountInput = document.querySelector(".amount");
 
 const testAccounts = [
   {
@@ -78,6 +81,10 @@ class Account {
 
   getPassword() {
     return this.password;
+  }
+
+  addMovement(amount) {
+    this.movements.push(amount);
   }
 }
 
