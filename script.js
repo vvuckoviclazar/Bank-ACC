@@ -86,6 +86,10 @@ class Account {
   addMovement(amount) {
     this.movements.push(amount);
   }
+
+  getTotalBalance() {
+    return this.movements.reduce((acc, mov) => acc + mov, 0);
+  }
 }
 
 class AccManager {
@@ -153,7 +157,44 @@ class AccManager {
   }
 }
 
+class TransactionManager {
+  constructor(accountManager) {
+    this.accountManager = accountManager;
+  }
+
+  transferMoney(toEmail, amount) {
+    if (!this.accountManager.getCurrentAccount()) return;
+
+    const sender = this.accountManager.getCurrentAccount();
+    const receiver = this.accountManager.accounts.find(
+      (acc) => acc.getEmail() === toEmail
+    );
+    const transferAmount = amount * 1;
+
+    if (
+      !receiver ||
+      isNaN(transferAmount) ||
+      transferAmount <= 0 ||
+      sender.getTotalBalance() < transferAmount
+    )
+      return;
+
+    sender.addMovement(-transferAmount);
+    receiver.addMovement(transferAmount);
+
+    displayMovements();
+  }
+}
+
 const manager = new AccManager();
+const transactionManager = new TransactionManager(manager);
+
+transferBtn.addEventListener("click", () => {
+  const toEmail = toInput.value.trim();
+  const amount = amountInput.value.trim();
+
+  transactionManager.transferMoney(toEmail, amount);
+});
 
 function renderMovements(movements, container) {
   container.innerHTML = "";
@@ -178,15 +219,19 @@ function renderMovements(movements, container) {
 
 function createNotification(type, text, target, isRemovable) {
   if (type === "error") {
-    if (target === "login") {
-      errorDiv.innerHTML = `<span class="errorSpan">${text}</span>`;
-    } else if (target === "signup") {
-      errorDiv2.innerHTML = `
-        <span class="singUp-span2">
-          ${text}
-          <button class="spanBtn">x</button>
-        </span>
-      `;
+    let targetDiv = target === "login" ? errorDiv : errorDiv2;
+
+    targetDiv.innerHTML = `
+      <span class="${target === "signup" ? "singUp-span2" : "errorSpan"}">
+        ${text} 
+        ${isRemovable ? '<button class="spanBtn">x</button>' : ""}
+      </span>
+    `;
+
+    if (!isRemovable) {
+      setTimeout(() => {
+        targetDiv.innerHTML = "";
+      }, 3000);
     }
   }
 }
@@ -221,7 +266,7 @@ signupForm.addEventListener("submit", (e) => {
   errorDiv2.innerHTML = "";
 
   if (newName.value.trim() === "") {
-    createNotification("error", "The name field is required.", "signup");
+    createNotification("error", "The name field is required.", "signup", true);
     return;
   }
 
@@ -229,7 +274,8 @@ signupForm.addEventListener("submit", (e) => {
     createNotification(
       "error",
       "Invalid email! Email must contain '@'.",
-      "signup"
+      "signup",
+      true
     );
     return;
   }
@@ -238,7 +284,8 @@ signupForm.addEventListener("submit", (e) => {
     createNotification(
       "error",
       "Password must be at least 4 characters!",
-      "signup"
+      "signup",
+      true
     );
     return;
   }
@@ -265,7 +312,7 @@ loginForm.addEventListener("submit", (e) => {
   manager.findAcc(enteredEmail, enteredPassword);
 
   if (!manager.getCurrentAccount()) {
-    createNotification("error", "Incorrect email or password!", "login");
+    createNotification("error", "Incorrect email or password!", "login", false);
 
     setTimeout(() => {
       errorDiv.innerHTML = "";
