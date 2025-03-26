@@ -66,14 +66,25 @@ h3 {
   font-size: 25rem;
 }
 
-p {
+.backToLogin,
+.singUp {
   color: rgb(9, 73, 100);
   font-size: 25rem;
   text-decoration: underline;
 }
 
-p:hover {
+.backToLogin:hover,
+.singUp:hover {
   transform: scale(1.07);
+}
+
+.backToLogin2 {
+  font-size: 22rem;
+  border-radius: 10rem;
+  padding: 5rem 10rem 5rem 10rem;
+  margin-bottom: 5rem;
+  margin-left: 424rem;
+  border: 3rem solid;
 }
 
 input {
@@ -300,7 +311,7 @@ h5 {
 }
 
 .rightDiv {
-  padding-top: 93rem;
+  padding-top: 44rem;
 }
 
 .buttonDiv {

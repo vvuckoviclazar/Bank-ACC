@@ -7,6 +7,7 @@ const loginForm = document.querySelector(".loginForm");
 const signupForm = document.querySelector(".newAcc");
 const singUpBtn = document.querySelector(".singUp-Btn");
 const backToLogin = document.querySelector(".backToLogin");
+const backToLogin2 = document.querySelector(".backToLogin2");
 const newName = document.querySelector(".name");
 const newEmail = document.querySelector(".newEmail");
 const newPassword = document.querySelector(".newPassword");
@@ -30,6 +31,12 @@ const errorDiv2 = document.querySelector(".errorDiv2");
 const transferBtn = document.querySelector(".transferBtn");
 const toInput = document.querySelector(".to");
 const amountInput = document.querySelector(".amount");
+const requestAmountInput = document.querySelector(".requestAmount");
+const requestBtn = document.querySelector(".requestBtn");
+const closeBtn = document.querySelector(".closeBtn");
+const closeEmailInput = document.querySelector(".closeEmail");
+const closePasswordInput = document.querySelector(".closePassword");
+const confirmClosePassInput = document.querySelector(".confirmClosePass");
 
 const testAccounts = [
   {
@@ -44,7 +51,18 @@ const testAccounts = [
     email: "nemanja@gmail.com",
     password: "1234",
     pin: 2222,
-    movements: [500, -200, 340, -300, -20, 50, 400, -460],
+    movements: [
+      {
+        amount: 500,
+      },
+      -200,
+      340,
+      -300,
+      -20,
+      50,
+      400,
+      -460,
+    ],
   },
 ];
 
@@ -84,7 +102,7 @@ class Account {
   }
 
   addMovement(amount) {
-    this.movements.push(amount);
+    this.movements.unshift(amount);
   }
 
   getTotalBalance() {
@@ -169,20 +187,59 @@ class TransactionManager {
     const receiver = this.accountManager.accounts.find(
       (acc) => acc.getEmail() === toEmail
     );
+    // type coercion
     const transferAmount = amount * 1;
 
+    if (!receiver || receiver === sender) return;
+
     if (
-      !receiver ||
+      //typeof
       isNaN(transferAmount) ||
       transferAmount <= 0 ||
       sender.getTotalBalance() < transferAmount
-    )
+    ) {
       return;
+    }
 
     sender.addMovement(-transferAmount);
     receiver.addMovement(transferAmount);
 
     displayMovements();
+  }
+
+  requestLoan(amount) {
+    if (!this.accountManager.getCurrentAccount()) return;
+
+    const loanAmount = amount * 1;
+    //typeof
+    if (isNaN(loanAmount) || loanAmount <= 0) return;
+
+    this.accountManager.getCurrentAccount().addMovement(loanAmount);
+
+    displayMovements();
+  }
+
+  closeAccount(email, password, confirmPassword) {
+    if (!this.accountManager.getCurrentAccount()) return;
+
+    const currentAccount = this.accountManager.getCurrentAccount();
+
+    if (
+      email !== currentAccount.getEmail() ||
+      password !== currentAccount.getPassword() ||
+      password !== confirmPassword
+    ) {
+      return;
+    }
+
+    this.accountManager.accounts = this.accountManager.accounts.filter(
+      (acc) => acc.getEmail() !== email
+    );
+
+    this.accountManager.currentAccount = null;
+
+    listContainer.classList.add("hidden-list");
+    loginForm.classList.remove("hidden-2");
   }
 }
 
@@ -194,6 +251,19 @@ transferBtn.addEventListener("click", () => {
   const amount = amountInput.value.trim();
 
   transactionManager.transferMoney(toEmail, amount);
+});
+
+requestBtn.addEventListener("click", () => {
+  const loanAmount = requestAmountInput.value;
+  transactionManager.requestLoan(loanAmount);
+});
+
+closeBtn.addEventListener("click", () => {
+  const email = closeEmailInput.value;
+  const password = closePasswordInput.value;
+  const confirmPassword = confirmClosePassInput.value;
+
+  transactionManager.closeAccount(email, password, confirmPassword);
 });
 
 function renderMovements(movements, container) {
@@ -313,10 +383,6 @@ loginForm.addEventListener("submit", (e) => {
 
   if (!manager.getCurrentAccount()) {
     createNotification("error", "Incorrect email or password!", "login", false);
-
-    setTimeout(() => {
-      errorDiv.innerHTML = "";
-    }, 3000);
     return;
   }
 
@@ -337,8 +403,19 @@ backToLogin.addEventListener("click", (e) => {
   listContainer.classList.add("hidden-list");
 });
 
+backToLogin2.addEventListener("click", (e) => {
+  signupForm.classList.add("hidden-2");
+  loginForm.classList.remove("hidden-2");
+  listContainer.classList.add("hidden-list");
+});
+
 errorDiv2.addEventListener("click", (e) => {
   if (e.target.classList.contains("spanBtn")) {
     errorDiv2.innerHTML = "";
   }
 });
+
+const currentDate = new Date();
+console.log(currentDate);
+// how to get year, month, day, hour from new Date in javascript
+// how to format dates in javascript
