@@ -44,7 +44,16 @@ const testAccounts = [
     email: "lazarv@gmail.com",
     password: "1234",
     pin: 1111,
-    movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
+    movements: [
+      [200, "12.03.2025"],
+      [450, "13.03.2025"],
+      [-400, "14.03.2025"],
+      [3000, "15.03.2025"],
+      [-650, "16.03.2025"],
+      [-130, "17.03.2025"],
+      [70, "18.03.2025"],
+      [1300, "19.03.2025"],
+    ],
   },
   {
     owner: "Nemanja Malesija",
@@ -52,20 +61,19 @@ const testAccounts = [
     password: "1234",
     pin: 2222,
     movements: [
-      {
-        amount: 500,
-      },
-      -200,
-      340,
-      -300,
-      -20,
-      50,
-      400,
-      -460,
+      [500, "12.03.2025"],
+      [-200, "13.03.2025"],
+      [340, "14.03.2025"],
+      [-300, "15.03.2025"],
+      [-20, "16.03.2025"],
+      [50, "17.03.2025"],
+      [400, "18.03.2025"],
+      [-460, "19.03.2025"],
     ],
   },
 ];
 
+const currentDate = new Date().toLocaleDateString("de-DE").replace(/\//g, ".");
 let enteredEmail;
 let enteredPassword;
 
@@ -144,9 +152,9 @@ class AccManager {
     let movements = [...this.currentAccount.getMovements()];
 
     if (sortType === "asc") {
-      return movements.sort((a, b) => a - b);
+      return movements.sort((a, b) => a[0] - b[0]);
     } else if (sortType === "desc") {
-      return movements.sort((a, b) => b - a);
+      return movements.sort((a, b) => b[0] - a[0]);
     } else {
       return movements;
     }
@@ -173,27 +181,18 @@ class AccManager {
   getTotalBalance() {
     return this.getTotalIncome() + this.getTotalDeductions();
   }
-}
-
-class TransactionManager {
-  constructor(accountManager) {
-    this.accountManager = accountManager;
-  }
 
   transferMoney(toEmail, amount) {
-    if (!this.accountManager.getCurrentAccount()) return;
+    if (!this.currentAccount) return;
 
-    const sender = this.accountManager.getCurrentAccount();
-    const receiver = this.accountManager.accounts.find(
-      (acc) => acc.getEmail() === toEmail
-    );
-    // type coercion
-    const transferAmount = amount * 1;
+    const sender = this.currentAccount;
+    const receiver = this.accounts.find((acc) => acc.getEmail() === toEmail);
+
+    const transferAmount = Number(amount);
 
     if (!receiver || receiver === sender) return;
 
     if (
-      //typeof
       isNaN(transferAmount) ||
       transferAmount <= 0 ||
       sender.getTotalBalance() < transferAmount
@@ -201,28 +200,28 @@ class TransactionManager {
       return;
     }
 
-    sender.addMovement(-transferAmount);
-    receiver.addMovement(transferAmount);
+    sender.movements.unshift([-transferAmount, currentDate]);
+    receiver.movements.unshift([transferAmount, currentDate]);
 
     displayMovements();
   }
 
   requestLoan(amount) {
-    if (!this.accountManager.getCurrentAccount()) return;
+    if (!this.currentAccount) return;
 
-    const loanAmount = amount * 1;
-    //typeof
+    const loanAmount = Number(amount);
+
     if (isNaN(loanAmount) || loanAmount <= 0) return;
 
-    this.accountManager.getCurrentAccount().addMovement(loanAmount);
+    this.currentAccount.movements.unshift([loanAmount, currentDate]);
 
     displayMovements();
   }
 
   closeAccount(email, password, confirmPassword) {
-    if (!this.accountManager.getCurrentAccount()) return;
+    if (!this.currentAccount) return;
 
-    const currentAccount = this.accountManager.getCurrentAccount();
+    const currentAccount = this.currentAccount;
 
     if (
       email !== currentAccount.getEmail() ||
@@ -232,11 +231,8 @@ class TransactionManager {
       return;
     }
 
-    this.accountManager.accounts = this.accountManager.accounts.filter(
-      (acc) => acc.getEmail() !== email
-    );
-
-    this.accountManager.currentAccount = null;
+    this.accounts = this.accounts.filter((acc) => acc.getEmail() !== email);
+    this.currentAccount = null;
 
     listContainer.classList.add("hidden-list");
     loginForm.classList.remove("hidden-2");
@@ -244,18 +240,17 @@ class TransactionManager {
 }
 
 const manager = new AccManager();
-const transactionManager = new TransactionManager(manager);
 
 transferBtn.addEventListener("click", () => {
   const toEmail = toInput.value.trim();
   const amount = amountInput.value.trim();
 
-  transactionManager.transferMoney(toEmail, amount);
+  manager.transferMoney(toEmail, amount);
 });
 
 requestBtn.addEventListener("click", () => {
   const loanAmount = requestAmountInput.value;
-  transactionManager.requestLoan(loanAmount);
+  manager.requestLoan(loanAmount);
 });
 
 closeBtn.addEventListener("click", () => {
@@ -263,21 +258,23 @@ closeBtn.addEventListener("click", () => {
   const password = closePasswordInput.value;
   const confirmPassword = confirmClosePassInput.value;
 
-  transactionManager.closeAccount(email, password, confirmPassword);
+  manager.closeAccount(email, password, confirmPassword);
 });
 
 function renderMovements(movements, container) {
   container.innerHTML = "";
 
-  movements.forEach((mov) => {
-    const type = mov < 0 ? "deduction" : "income";
+  movements.forEach(([money, date]) => {
+    const type = money < 0 ? "deduction" : "income";
+
     const li = document.createElement("li");
     li.classList.add("movement", `movement--${type}`);
 
     li.innerHTML = `
-      <span class="mov-value">${mov}</span> 
+      <span class="mov-value">${money}$</span> 
+       <span class="mov-date">${date}</span>
       <span class="mov-type">${type}</span>
-    `;
+     `;
 
     const movTypeSpan = li.querySelector(".mov-type");
     movTypeSpan.style.backgroundColor =
@@ -287,23 +284,31 @@ function renderMovements(movements, container) {
   });
 }
 
-function createNotification(type, text, target, isRemovable) {
+function createNotification(type, text, isRemovable = false) {
+  const span = document.createElement("span");
+
+  span.classList.add("notification-span");
+
   if (type === "error") {
-    let targetDiv = target === "login" ? errorDiv : errorDiv2;
-
-    targetDiv.innerHTML = `
-      <span class="${target === "signup" ? "singUp-span2" : "errorSpan"}">
-        ${text} 
-        ${isRemovable ? '<button class="spanBtn">x</button>' : ""}
-      </span>
-    `;
-
-    if (!isRemovable) {
-      setTimeout(() => {
-        targetDiv.innerHTML = "";
-      }, 3000);
-    }
+    span.classList.add("errorSpan");
   }
+
+  if (isRemovable) {
+    span.classList.add("removableSpan");
+  }
+
+  span.innerHTML = `
+    ${text} 
+    ${isRemovable ? '<button class="spanBtn">x</button>' : ""}
+  `;
+
+  if (!isRemovable) {
+    setTimeout(() => {
+      span.remove();
+    }, 3000);
+  }
+
+  return span;
 }
 
 function displayMovements(sortType = "default") {
@@ -336,27 +341,33 @@ signupForm.addEventListener("submit", (e) => {
   errorDiv2.innerHTML = "";
 
   if (newName.value.trim() === "") {
-    createNotification("error", "The name field is required.", "signup", true);
+    const notif = createNotification(
+      "error",
+      "The name field is required.",
+      true
+    );
+    errorDiv2.appendChild(notif);
     return;
   }
 
   if (!newEmail.value.includes("@")) {
-    createNotification(
+    const notif = createNotification(
       "error",
       "Invalid email! Email must contain '@'.",
-      "signup",
       true
     );
+    errorDiv2.appendChild(notif);
     return;
   }
 
   if (newPassword.value.length < 4) {
-    createNotification(
+    const notif = createNotification(
       "error",
+
       "Password must be at least 4 characters!",
-      "signup",
       true
     );
+    errorDiv2.appendChild(notif);
     return;
   }
 
@@ -382,7 +393,12 @@ loginForm.addEventListener("submit", (e) => {
   manager.findAcc(enteredEmail, enteredPassword);
 
   if (!manager.getCurrentAccount()) {
-    createNotification("error", "Incorrect email or password!", "login", false);
+    const notif = createNotification(
+      "error",
+      "Incorrect email or password!",
+      false
+    );
+    errorDiv.appendChild(notif);
     return;
   }
 
@@ -411,11 +427,10 @@ backToLogin2.addEventListener("click", (e) => {
 
 errorDiv2.addEventListener("click", (e) => {
   if (e.target.classList.contains("spanBtn")) {
-    errorDiv2.innerHTML = "";
+    e.target.parentElement.remove();
   }
 });
 
-const currentDate = new Date();
 console.log(currentDate);
 // how to get year, month, day, hour from new Date in javascript
 // how to format dates in javascript
