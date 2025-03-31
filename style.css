@@ -81,7 +81,7 @@ h3 {
   border-radius: 10rem;
   padding: 5rem 10rem 5rem 10rem;
   margin-bottom: 5rem;
-  margin-left: 424rem;
+
   border: 3rem solid;
 }
 
@@ -342,4 +342,24 @@ h5 {
   color: rgb(3, 37, 52);
   font-weight: bold;
   cursor: pointer;
+}
+
+.notification-btn-div {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 10rem;
+}
+
+.successSpan {
+  display: block;
+  color: rgb(3, 52, 27);
+  background-color: rgb(92, 215, 138);
+  border: 1rem solid rgb(5, 149, 62);
+  padding: 10rem 1rem;
+  font-size: 20rem;
+  border-radius: 5rem;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 8rem;
+  margin-top: -15rem;
 }

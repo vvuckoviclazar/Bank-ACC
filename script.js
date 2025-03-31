@@ -37,6 +37,9 @@ const closeBtn = document.querySelector(".closeBtn");
 const closeEmailInput = document.querySelector(".closeEmail");
 const closePasswordInput = document.querySelector(".closePassword");
 const confirmClosePassInput = document.querySelector(".confirmClosePass");
+const transferNotificationDiv = document.querySelector(
+  ".transfer-notification"
+);
 
 const testAccounts = [
   {
@@ -45,7 +48,7 @@ const testAccounts = [
     password: "1234",
     pin: 1111,
     movements: [
-      [200, "12.03.2025"],
+      { value: 200, date: "12.03.2025" },
       [450, "13.03.2025"],
       [-400, "14.03.2025"],
       [3000, "15.03.2025"],
@@ -73,7 +76,6 @@ const testAccounts = [
   },
 ];
 
-const currentDate = new Date().toLocaleDateString("de-DE").replace(/\//g, ".");
 let enteredEmail;
 let enteredPassword;
 
@@ -165,8 +167,8 @@ class AccManager {
 
     return this.currentAccount
       .getMovements()
-      .filter((mov) => mov > 0)
-      .reduce((acc, mov) => acc + mov, 0);
+      .filter(([amount]) => amount > 0)
+      .reduce((acc, [amount]) => acc + amount, 0);
   }
 
   getTotalDeductions() {
@@ -174,12 +176,16 @@ class AccManager {
 
     return this.currentAccount
       .getMovements()
-      .filter((mov) => mov < 0)
-      .reduce((acc, mov) => acc + mov, 0);
+      .filter(([amount]) => amount < 0)
+      .reduce((acc, [amount]) => acc + Math.abs(amount), 0);
   }
 
   getTotalBalance() {
-    return this.getTotalIncome() + this.getTotalDeductions();
+    if (!this.currentAccount) return 0;
+
+    return this.currentAccount
+      .getMovements()
+      .reduce((acc, [amount]) => acc + amount, 0);
   }
 
   transferMoney(toEmail, amount) {
@@ -187,21 +193,45 @@ class AccManager {
 
     const sender = this.currentAccount;
     const receiver = this.accounts.find((acc) => acc.getEmail() === toEmail);
-
     const transferAmount = Number(amount);
+    transferNotificationDiv.innerHTML = "";
 
-    if (!receiver || receiver === sender) return;
+    if (!receiver || receiver === sender) {
+      const notif = showTransferNotification("error", "Invalid email.");
+      transferNotificationDiv.appendChild(notif);
+      return;
+    }
+
+    const currentBalance = sender
+      .getMovements()
+      .reduce((acc, [amount]) => acc + amount, 0);
 
     if (
       isNaN(transferAmount) ||
       transferAmount <= 0 ||
-      sender.getTotalBalance() < transferAmount
+      currentBalance < transferAmount
     ) {
+      const notif = showTransferNotification(
+        "error",
+        "Not enough balance to complete transfer."
+      );
+      transferNotificationDiv.appendChild(notif);
       return;
     }
 
+    const currentDate = new Date()
+      .toLocaleDateString("de-DE")
+      .replace(/\//g, ".");
+    // const transaction movement = new Movement()
+    // new Movement gde god se desavaju transakcije (transfer i loan)
     sender.movements.unshift([-transferAmount, currentDate]);
     receiver.movements.unshift([transferAmount, currentDate]);
+
+    const notif = showTransferNotification(
+      "success",
+      `Successfully transferred $${transferAmount} to ${receiver.getName()}`
+    );
+    transferNotificationDiv.appendChild(notif);
 
     displayMovements();
   }
@@ -307,6 +337,24 @@ function createNotification(type, text, isRemovable = false) {
       span.remove();
     }, 3000);
   }
+
+  return span;
+}
+
+function showTransferNotification(status, message) {
+  const span = document.createElement("span");
+  span.classList.add("notification-span", "has-close-btn");
+
+  if (status === "success") {
+    span.classList.add("successSpan");
+  } else if (status === "error") {
+    span.classList.add("errorSpan");
+  }
+
+  span.innerHTML = `
+    ${message}
+    <button class="spanBtn">x</button>
+  `;
 
   return span;
 }
@@ -431,6 +479,8 @@ errorDiv2.addEventListener("click", (e) => {
   }
 });
 
-console.log(currentDate);
-// how to get year, month, day, hour from new Date in javascript
-// how to format dates in javascript
+transferNotificationDiv.addEventListener("click", (e) => {
+  if (e.target.classList.contains("spanBtn")) {
+    e.target.parentElement.remove();
+  }
+});
