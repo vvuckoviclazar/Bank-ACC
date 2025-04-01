@@ -49,13 +49,13 @@ const testAccounts = [
     pin: 1111,
     movements: [
       { value: 200, date: "12.03.2025" },
-      [450, "13.03.2025"],
-      [-400, "14.03.2025"],
-      [3000, "15.03.2025"],
-      [-650, "16.03.2025"],
-      [-130, "17.03.2025"],
-      [70, "18.03.2025"],
-      [1300, "19.03.2025"],
+      { value: 450, date: "13.03.2025" },
+      { value: -400, date: "14.03.2025" },
+      { value: 3000, date: "15.03.2025" },
+      { value: -650, date: "16.03.2025" },
+      { value: -130, date: "17.03.2025" },
+      { value: 70, date: "18.03.2025" },
+      { value: 1300, date: "19.03.2025" },
     ],
   },
   {
@@ -64,14 +64,14 @@ const testAccounts = [
     password: "1234",
     pin: 2222,
     movements: [
-      [500, "12.03.2025"],
-      [-200, "13.03.2025"],
-      [340, "14.03.2025"],
-      [-300, "15.03.2025"],
-      [-20, "16.03.2025"],
-      [50, "17.03.2025"],
-      [400, "18.03.2025"],
-      [-460, "19.03.2025"],
+      { value: 500, date: "12.03.2025" },
+      { value: -200, date: "13.03.2025" },
+      { value: 340, date: "14.03.2025" },
+      { value: -300, date: "15.03.2025" },
+      { value: -20, date: "16.03.2025" },
+      { value: 50, date: "17.03.2025" },
+      { value: 400, date: "18.03.2025" },
+      { value: -460, date: "19.03.2025" },
     ],
   },
 ];
@@ -86,6 +86,29 @@ emailInput.addEventListener("input", (e) => {
 passwordInput.addEventListener("input", (e) => {
   enteredPassword = e.target.value;
 });
+
+class Movement {
+  constructor(value) {
+    this.value = value;
+    this.date = new Date().toLocaleDateString("de-DE").replace(/\//g, ".");
+  }
+
+  getValue() {
+    return this.value;
+  }
+
+  getDate() {
+    return this.date;
+  }
+
+  isIncome() {
+    return this.value > 0;
+  }
+
+  isDeduction() {
+    return this.value < 0;
+  }
+}
 
 class Account {
   constructor(name, email, password, movements = []) {
@@ -110,22 +133,24 @@ class Account {
   getPassword() {
     return this.password;
   }
-
   addMovement(amount) {
-    this.movements.unshift(amount);
+    const movement = new Movement(amount);
+    this.movements.unshift(movement);
   }
 
   getTotalBalance() {
-    return this.movements.reduce((acc, mov) => acc + mov, 0);
+    return this.movements.reduce((acc, mov) => acc + mov.getValue(), 0);
   }
 }
 
 class AccManager {
   constructor() {
-    this.accounts = testAccounts.map(
-      (acc) => new Account(acc.owner, acc.email, acc.password, acc.movements)
-    );
-    this.currentAccount = null;
+    this.accounts = testAccounts.map((acc) => {
+      const movementInstances = acc.movements.map(
+        (mov) => new Movement(mov.value)
+      );
+      return new Account(acc.owner, acc.email, acc.password, movementInstances);
+    });
   }
 
   addAcc(account) {
@@ -150,13 +175,11 @@ class AccManager {
 
   sortMovements(sortType) {
     if (!this.currentAccount) return [];
-
     let movements = [...this.currentAccount.getMovements()];
-
     if (sortType === "asc") {
-      return movements.sort((a, b) => a[0] - b[0]);
+      return movements.sort((a, b) => a.getValue() - b.getValue());
     } else if (sortType === "desc") {
-      return movements.sort((a, b) => b[0] - a[0]);
+      return movements.sort((a, b) => b.getValue() - a.getValue());
     } else {
       return movements;
     }
@@ -164,28 +187,25 @@ class AccManager {
 
   getTotalIncome() {
     if (!this.currentAccount) return 0;
-
     return this.currentAccount
       .getMovements()
-      .filter(([amount]) => amount > 0)
-      .reduce((acc, [amount]) => acc + amount, 0);
+      .filter((mov) => mov.isIncome())
+      .reduce((acc, mov) => acc + mov.getValue(), 0);
   }
 
   getTotalDeductions() {
     if (!this.currentAccount) return 0;
-
     return this.currentAccount
       .getMovements()
-      .filter(([amount]) => amount < 0)
-      .reduce((acc, [amount]) => acc + Math.abs(amount), 0);
+      .filter((mov) => mov.isDeduction())
+      .reduce((acc, mov) => acc + Math.abs(mov.getValue()), 0);
   }
 
   getTotalBalance() {
     if (!this.currentAccount) return 0;
-
     return this.currentAccount
       .getMovements()
-      .reduce((acc, [amount]) => acc + amount, 0);
+      .reduce((acc, mov) => acc + mov.getValue(), 0);
   }
 
   transferMoney(toEmail, amount) {
@@ -204,7 +224,7 @@ class AccManager {
 
     const currentBalance = sender
       .getMovements()
-      .reduce((acc, [amount]) => acc + amount, 0);
+      .reduce((acc, mov) => acc + mov.getValue(), 0);
 
     if (
       isNaN(transferAmount) ||
@@ -219,13 +239,11 @@ class AccManager {
       return;
     }
 
-    const currentDate = new Date()
-      .toLocaleDateString("de-DE")
-      .replace(/\//g, ".");
-    // const transaction movement = new Movement()
-    // new Movement gde god se desavaju transakcije (transfer i loan)
-    sender.movements.unshift([-transferAmount, currentDate]);
-    receiver.movements.unshift([transferAmount, currentDate]);
+    const outMovement = new Movement(-transferAmount);
+    const inMovement = new Movement(transferAmount);
+
+    sender.movements.unshift(outMovement);
+    receiver.movements.unshift(inMovement);
 
     const notif = showTransferNotification(
       "success",
@@ -240,10 +258,10 @@ class AccManager {
     if (!this.currentAccount) return;
 
     const loanAmount = Number(amount);
-
     if (isNaN(loanAmount) || loanAmount <= 0) return;
 
-    this.currentAccount.movements.unshift([loanAmount, currentDate]);
+    const loanMovement = new Movement(loanAmount);
+    this.currentAccount.movements.unshift(loanMovement);
 
     displayMovements();
   }
@@ -294,7 +312,7 @@ closeBtn.addEventListener("click", () => {
 function renderMovements(movements, container) {
   container.innerHTML = "";
 
-  movements.forEach(([money, date]) => {
+  movements.forEach(({ value: money, date }) => {
     const type = money < 0 ? "deduction" : "income";
 
     const li = document.createElement("li");
